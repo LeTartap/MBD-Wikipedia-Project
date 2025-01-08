@@ -1,4 +1,3 @@
-### **Clear Tasks for the Project**
 
 #### **Objective:**
 Analyze Wikipedia usage trends over the past 15 years, focusing on **new user accounts**, **article view counts**, and **number of edits**, while exploring the impact of generative AI, major world events, and potential anomalies in specific topics or categories.
@@ -140,4 +139,3 @@ Analyze Wikipedia usage trends over the past 15 years, focusing on **new user ac
 - Set up the data pipeline to fetch data from Wikimedia APIs.
 - Begin with data exploration to validate hypotheses.
 
-Let me know if you need help breaking down any of these tasks further! 🚀
