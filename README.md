@@ -8,16 +8,16 @@ Analyze Wikipedia usage trends over the past 15 years, focusing on **new user ac
 
 **Task 1.1**: **Extract Historical Data**
 - Use the Wikimedia Analytics API to collect:
-  - Number of **new user accounts** created per year (2008–2024).
-  - **Article view counts** (daily/monthly aggregated) for relevant topics/categories.
-  - **Number of edits** per year for all articles or specific topics.
+  - [] Number of **new user accounts** created per year (2008–2024).
+  - [] **Article view counts** (daily/monthly aggregated) for relevant topics/categories.
+  - [] **Number of edits** per year for all articles or specific topics.
 - Deliverable: Cleaned dataset containing yearly trends.
 
 **Task 1.2**: **Retrieve Revision History**
 - Use the Wikimedia Action API to fetch:
-  - Revision history for specific topics (e.g., US Elections, COVID-19, War in Ukraine).
-  - Revision IDs, timestamps, editors (new vs. old accounts), and size of changes.
-- Deliverable: Dataset of revisions for selected articles.
+  - [] Revision history for specific topics (e.g., US Elections, COVID-19, War in Ukraine).
+  - [x] Revision IDs, timestamps, editors (new vs. old accounts), and size of changes.
+- Deliverable: [] Dataset of revisions for selected articles.
 
 **Task 1.3**: **Identify Categories**
 - Explore the API for article categorization (e.g., portals, templates, or categories).
