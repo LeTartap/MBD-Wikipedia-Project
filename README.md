@@ -113,13 +113,13 @@ Analyze Wikipedia usage trends over the past 15 years, focusing on **new user ac
   - Views and edits for selected topics.
   - Peaks during generative AI milestones and world events.
 
-**Task 5.2**: **Interactive Dashboard**
+<!-- **Task 5.2**: **Interactive Dashboard**
 - Create a dashboard showing:
   - Editable graphs for views, edits, and accounts over time.
   - Filters for specific topics (e.g., elections, pandemics).
-- Deliverable: Dashboard hosted locally or on a cloud platform.
+- Deliverable: Dashboard hosted locally or on a cloud platform. -->
 
-**Task 5.3**: **Prepare Final Report**
+**Task 5.2**: **Prepare Final Report**
 - Summarize findings with:
   - Key trends.
   - Evidence of generative AI contributions.
@@ -127,15 +127,3 @@ Analyze Wikipedia usage trends over the past 15 years, focusing on **new user ac
 - Deliverable: Report with actionable insights and visualizations.
 
 ---
-
-### **Stretch Goals**
-- Predict future trends in views and edits using machine learning models.
-- Build a tool to detect generative AI edits in real-time.
-
----
-
-### **Next Steps**
-- Finalize the specific topics and categories to analyze.
-- Set up the data pipeline to fetch data from Wikimedia APIs.
-- Begin with data exploration to validate hypotheses.
-
