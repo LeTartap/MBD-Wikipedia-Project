@@ -29,7 +29,7 @@ def save_revision_content_to_json(data, rev1, rev2, title, date):
             change['to_id'] = rev2
             change['title'] = title
             change['date'] = date
-            with open(f'hdfs_data/{title}_revision_content.json', 'a', encoding='utf-8') as f:
+            with open(f'rev_data/{title}_revision_content.json', 'a', encoding='utf-8') as f:
                 json.dump(change, f, ensure_ascii=False)
                 f.write('\n')
 
@@ -43,6 +43,7 @@ def save_revisions_to_hdfs(revisions, filename):
     """
     Saves the revisions in an HDFS-compatible format (JSON Lines).
     """
+
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, "a", encoding="utf-8") as f:
         for revision in revisions:
@@ -63,9 +64,13 @@ def get_article_revisions(title, older_than=None):
     }
     response = requests.get(url, headers=headers, params=parameters)
     if response.status_code != 200:
-        raise Exception(f"Error fetching revisions for {title}: {response.status_code}")
-    data = response.json()
-    return data.get("revisions", [])
+        if response.status_code == 429:
+            print(response.json())  
+            print("Rate limit exceeded. Please wait and try again later.")
+        print(f"Error fetching revisions for {title}: {response.status_code}")
+    else:
+        data = response.json()
+        return data.get("revisions", [])
 
 def loop_through_revisions(title, from_date=None, olderThanId=None):
     """
@@ -85,11 +90,21 @@ def loop_through_revisions(title, from_date=None, olderThanId=None):
 
 def get_revData_and_revContent(title, from_date):
     revisions = loop_through_revisions(title, from_date)
-    save_revisions_to_hdfs(revisions, f'hdfs_data/{title}_revisions.json')
+    if not revisions:
+        print(f"No revisions found for article: {title}")
+        return
+    save_revisions_to_hdfs(revisions, f'rev_data/{title}_revisions.json')
     idList = get_revision_ids(revisions)
     process_revisions(revisions, idList, title)
     print(f"Finished processing revisions for article: {title}")
 
-revisions_from = "2024-04-30T13:16:57Z"
+revisions_from = "2020-04-30T13:16:57Z"
 title = "Data_science"
-get_revData_and_revContent(title, revisions_from)
+# get_revData_and_revContent(title, revisions_from)
+
+#read titles json 
+with open('titlesUkr.json', "r", encoding="utf-8") as f:
+    titles = json.load(f)
+# print(titles)
+for title in tqdm(titles):
+    get_revData_and_revContent(title, revisions_from)
