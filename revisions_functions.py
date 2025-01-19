@@ -81,6 +81,7 @@ def loop_through_revisions(title, from_date=None, olderThanId=None):
     while True:
         new_revisions = get_article_revisions(title, older_than=olderThanId)
         if new_revisions == "429":
+            raise Exception("Rate limit exceeded")
             return "429"
         if not new_revisions:
             break
