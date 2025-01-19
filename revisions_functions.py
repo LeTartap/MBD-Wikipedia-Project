@@ -67,6 +67,7 @@ def get_article_revisions(title, older_than=None):
         if response.status_code == 429:
             print(response.json())  
             print("Rate limit exceeded. Please wait and try again later.")
+            return "429"
         print(f"Error fetching revisions for {title}: {response.status_code}")
     else:
         data = response.json()
@@ -79,6 +80,8 @@ def loop_through_revisions(title, from_date=None, olderThanId=None):
     revisions = []
     while True:
         new_revisions = get_article_revisions(title, older_than=olderThanId)
+        if new_revisions == "429":
+            return "429"
         if not new_revisions:
             break
         revisions.extend(new_revisions)
@@ -90,21 +93,32 @@ def loop_through_revisions(title, from_date=None, olderThanId=None):
 
 def get_revData_and_revContent(title, from_date):
     revisions = loop_through_revisions(title, from_date)
+    if revisions == "429":
+        return
     if not revisions:
         print(f"No revisions found for article: {title}")
+        remove_title_from_json(title)
         return
     save_revisions_to_hdfs(revisions, f'rev_data/{title}_revisions.json')
     idList = get_revision_ids(revisions)
     process_revisions(revisions, idList, title)
+    remove_title_from_json(title)
     print(f"Finished processing revisions for article: {title}")
 
 revisions_from = "2020-04-30T13:16:57Z"
-title = "Data_science"
-# get_revData_and_revContent(title, revisions_from)
 
+
+def remove_title_from_json(title):
+    with open(f'titlesUkr.json', 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    with open(f'titlesUkr.json', 'w', encoding='utf-8') as f:
+        for line in lines:
+            if title not in line:
+                f.write(line)
 #read titles json 
 with open('titlesUkr.json', "r", encoding="utf-8") as f:
     titles = json.load(f)
-# print(titles)
+
+
 for title in tqdm(titles):
     get_revData_and_revContent(title, revisions_from)
