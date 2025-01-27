@@ -12,6 +12,9 @@ df = spark.read.json(data_path)
 
 # Select only relevant columns
 df = df.select("date", "to_id", "text")
+#DELETE ALL BRAKETS AND SPECIAL CHARACTERS
+df = df.withColumn("text", when(col("text").isNotNull(), re.sub(r'[^\w\s]', '', col("text"))))
+
 
 # Define a UDF to filter valid sentences
 def is_valid_sentence(text):
