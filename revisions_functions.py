@@ -14,7 +14,7 @@ def get_revision_ids(jsonlist):
 def compare_revisions(rev1, rev2):
     url = f'https://api.wikimedia.org/core/v1/wikipedia/en/revision/{rev2}/compare/{rev1}'
     headers = {
-        'User-Agent': 'WikiSandbox/ManagingBigData'  # Replace with your project and email
+        'User-Agent': 'WikiSandbox/ManagingBigData David'  # Replace with your project and email
     }
     response = requests.get(url, headers=headers)
     data = response.json()
@@ -110,14 +110,14 @@ revisions_from = "2020-04-30T13:16:57Z"
 
 
 def remove_title_from_json(title):
-    with open(f'titlesUkr.json', 'r', encoding='utf-8') as f:
+    with open(f'UkrDavid.json', 'r', encoding='utf-8') as f:
         lines = f.readlines()
-    with open(f'titlesUkr.json', 'w', encoding='utf-8') as f:
+    with open(f'UkrDavid.json', 'w', encoding='utf-8') as f:
         for line in lines:
             if title not in line:
                 f.write(line)
 #read titles json 
-with open('titlesUkr.json', "r", encoding="utf-8") as f:
+with open('UkrDavid.json', "r", encoding="utf-8") as f:
     titles = json.load(f)
 
 
