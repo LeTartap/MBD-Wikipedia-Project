@@ -31,5 +31,11 @@ df_stats = df_mean.join(df_variance, "date_to_id")
 #calculate the variance to mean ratio
 df_stats = df_stats.withColumn("relative_variance", col("variance") / col("avg(word_count)"))
 
-
-df_variance.show(5)
+df_stats = df_stats.withColumn("to_id", split(col("date_to_id"), "_")[0])
+df_stats = df_stats.withColumn("date", split(col("date_to_id"), "_")[1])
+df_stats = df_stats.drop("date_to_id")
+df_stats.show(5)
+#add header to the csv
+header = ["to_id", "date", "avg(word_count)", "variance", "relative_variance"]
+#save the dataframe to a csv file
+df_stats.write.mode("overwrite").csv("/user/s2539829/SHARED_MBD/rev_data_SenLen", header=True)
