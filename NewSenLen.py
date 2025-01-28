@@ -23,6 +23,13 @@ df = df.withColumn("date_to_id", concat_ws("_", col("to_id"), col("date")))
 df = df.drop("date", "to_id","text","sentences")
 
 df_exploded = df.withColumn("word_count", explode(col("sentence_word_counts")))
+df_mean = df_exploded.groupBy("date_to_id").agg({"word_count": "mean"})
+df_mean.show(5)
 df_variance = df_exploded.groupBy("date_to_id").agg(variance(col("word_count")).alias("variance"))
+#merge the two dataframes
+df_stats = df_mean.join(df_variance, "date_to_id")
+#calculate the variance to mean ratio
+df_stats = df_stats.withColumn("relative_variance", col("variance") / col("avg(word_count)"))
+
 
 df_variance.show(5)
