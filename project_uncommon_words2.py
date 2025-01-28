@@ -1,13 +1,8 @@
 from pyspark.sql import SparkSession
 import subprocess
 import re
-
-
-from pyspark.sql.functions import udf, explode
-from pyspark.sql.types import DoubleType, ArrayType, StringType
-from pyspark.sql.functions import collect_list, col, concat_ws
-
-
+from pyspark.sql.functions import udf, col, concat_ws, collect_list, explode, split, lower, count, sum
+from pyspark.sql.types import StringType, IntegerType
 
 # Function to list files in HDFS
 def list_hdfs_files(hdfs_path):
@@ -48,11 +43,16 @@ for file in all_files:
 # Filter out incomplete groups
 file_groups = {title: paths for title, paths in file_groups.items() if paths["metadata"] and paths["content"]}
 
-
+# Initialize Spark session
 spark = SparkSession.builder.appName("RevisionProcessing").getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 
+# DataFrame to hold aggregated word counts across all revisions
+all_word_counts_df = None
+
 for title, paths in file_groups.items():
+    print(f"Processing: {title}")
+
     # Load metadata and content from HDFS
     metadata_df = spark.read.json(paths["metadata"])
     content_df = spark.read.json(paths["content"])
@@ -60,36 +60,36 @@ for title, paths in file_groups.items():
     # Join on `to_id`
     joined_df = content_df.join(metadata_df, content_df["to_id"] == metadata_df["id"], "inner")
 
-    # Group text by `to_id` and aggregate text
-    grouped_texts = joined_df.groupBy("to_id").agg(
-        collect_list("text").alias("texts")
-    )
-    grouped_texts.show(truncate=False)  # Check if data is grouped correctly
-
     # Combine all text into a single document per revision
-    grouped_texts = grouped_texts.withColumn("full_text", concat_ws(" ", col("texts")))
-    grouped_texts.show(truncate=False)  # Check the final result before saving
+    grouped_texts = joined_df.groupBy("to_id").agg(
+        concat_ws(" ", collect_list("text")).alias("full_text")
+    )
 
-    # Save intermediate results to HDFS
-    grouped_texts.write.json(f"/user/s2539829/SHARED_MBD/rev_data/output/{title}_grouped.json", mode="overwrite")
-    
+    # Tokenize words, convert to lowercase, and count occurrences
+    word_counts = grouped_texts.select(
+        explode(split(lower(col("full_text")), "\\s+")).alias("word")
+    ).groupBy("word").agg(count("word").alias("count"))
 
+    # Save word counts for this article to HDFS
+    output_path = f"/user/s2539829/SHARED_MBD/rev_data/output/{title}_word_counts.json"
+    word_counts.write.json(output_path, mode="overwrite")
+    print(f"Saved results to {output_path}")
 
+    # Aggregate word counts across all revisions
+    if all_word_counts_df is None:
+        all_word_counts_df = word_counts
+    else:
+        all_word_counts_df = all_word_counts_df.union(word_counts).groupBy("word").agg(
+            sum("count").alias("count")
+        )
 
-# Tokenize text
-tokenizer = udf(lambda text: re.findall(r'\b\w+\b', text.lower()), ArrayType(StringType()))
-tokenized_df = grouped_texts.withColumn("words", tokenizer(col("full_text")))
+# Sort the aggregated word counts by count in descending order
+if all_word_counts_df is not None:
+    all_word_counts_sorted_df = all_word_counts_df.orderBy(col("count").desc())
 
-# Load a word frequency dictionary (example, replace with a real one)
-word_frequencies = {"the": 0.065, "is": 0.047, "turkey": 0.0005}  # Example
-bc_word_freq = spark.sparkContext.broadcast(word_frequencies)
+    # Save aggregated and sorted word counts to HDFS
+    aggregated_output_path = "/user/s2539829/SHARED_MBD/rev_data/output/all_word_counts_sorted.json"
+    all_word_counts_sorted_df.write.json(aggregated_output_path, mode="overwrite")
+    print(f"Saved aggregated and sorted word counts to {aggregated_output_path}")
 
-# Calculate uncommonness score
-def uncommonness_score(words):
-    return sum(1 / bc_word_freq.value.get(word, 0.00001) for word in words) / len(words)
-
-uncommonness_udf = udf(uncommonness_score, DoubleType())
-scored_df = tokenized_df.withColumn("uncommon_index", uncommonness_udf(col("words")))
-
-# Save results back to HDFS
-scored_df.select("to_id", "uncommon_index").write.csv("/user/s2539829/SHARED_MBD/rev_data/output/uncommon_indices.csv", header=True, mode="overwrite")
+spark.stop()
